@@ -281,7 +281,8 @@
     }
 
     function save_data(data) {
-        Cookies.set(DATA_COOKIE_NAME, JSON.stringify(data), { path: "" });
+        const expire_days = X_DAY_BACK_HISTORY + 1;
+        Cookies.set(DATA_COOKIE_NAME, JSON.stringify(data), { expires: expire_days, path: "" });
     }
 
     function create_empty_data() {

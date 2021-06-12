@@ -31,6 +31,7 @@
 
 <body class="bg-info">
     <h1 class="d-none">Daily Status Check</h1>
+
     <div id="main-container" class="container-fluid h-100 bg-danger">
         <div class="row h-100 justify-content-center align-items-center">
             <div class="col-12 text-center">
@@ -39,8 +40,12 @@
                     <i id="status-mark-times" class="far fa-times-circle"></i>
                 </div>
                 <div class="mt-4">
-                    <button id="check-in-btn" type="button" class="btn btn-outline-light btn-lg">CHECK IN</button>
+                    <button id="check-in-btn" type="button" class="btn btn-outline-light btn-lg" disabled>CHECK IN</button>
                     <span id="check-in-done-message" class="d-none">DONE FOR TODAY</span>
+                    <noscript>
+                        <div class="mt-2"></div>
+                        <i>Sorry, your browser does not support JavaScript!</i>
+                    </noscript>
                 </div>
                 <div class="mt-5">
                     <span class="display-5">30-DAY BACK HISTORY</span>
@@ -151,6 +156,7 @@
         } else {
             set_view(false);
         }
+        $("#check-in-btn").prop('disabled', false);
 
         // Process data
         process_data(data);

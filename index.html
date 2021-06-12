@@ -85,21 +85,29 @@
         background-color: #ffe0e0;
     }
 
+    #check-in-btn {
+        display: block;
+        margin: auto;
+        height: 5vh;
+        line-height: 5vh;
+        padding: 0 1vh 0 1vh;
+        font-size: 2.5vh;
+    }
+
     #check-in-done-message {
         display: block;
         margin: auto;
         font-weight: 700;
-        font-size: 1.25rem;
-        line-height: 48px;
-        border-radius: .3rem;
+        font-size: 2.5vh;
+        line-height: 5vh;
     }
 
     .far {
-        font-size: 16vw;
+        font-size: 22vh;
     }
 
     .display-5 {
-        font-size: 1.5rem;
+        font-size: 2vh;
         font-weight: 300;
         line-height: 1.2;
     }
@@ -135,6 +143,14 @@
     $(document).ready(function () {
         // Load data
         let data = load_data();
+
+        // Set view
+        if (data[0].timestamp != null
+            && get_date_without_time(new Date()).toDateString() == get_date_without_time(new Date(data[0].timestamp)).toDateString()) {
+            set_view(true);
+        } else {
+            set_view(false);
+        }
 
         // Process data
         process_data(data);
@@ -246,7 +262,7 @@
         let data = null;
 
         let cookie_data = Cookies.get(DATA_COOKIE_NAME);
-        if (cookie_data) { // Parse the data from cookie
+        if (cookie_data != null) { // Parse the data from cookie
             data = JSON.parse(cookie_data);
         }
 
@@ -271,6 +287,12 @@
 
     function create_data_obj(status = false, timestamp = null) {
         return { "status": status, "timestamp": timestamp };
+    }
+
+    function get_date_without_time(dateTime) {
+        var date = new Date(dateTime.getTime());
+        date.setHours(0, 0, 0, 0);
+        return date;
     }
 </script>
 

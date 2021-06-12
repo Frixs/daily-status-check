@@ -1,0 +1,277 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Daily Check Status</title>
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- JavaScript Cookie -->
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+        integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+</head>
+
+<body class="bg-info">
+    <h1 class="d-none">Daily Status Check</h1>
+    <div id="main-container" class="container-fluid h-100 bg-danger">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="col-12 text-center">
+                <div>
+                    <i id="status-mark-check" class="far fa-check-circle d-none"></i>
+                    <i id="status-mark-times" class="far fa-times-circle"></i>
+                </div>
+                <div class="mt-4">
+                    <button id="check-in-btn" type="button" class="btn btn-outline-light btn-lg">CHECK IN</button>
+                    <span id="check-in-done-message" class="d-none">DONE FOR TODAY</span>
+                </div>
+                <div class="mt-5">
+                    <span class="display-5">30-DAY BACK HISTORY</span>
+                    <div class="container mt-2">
+                        <table id="table-history" class="table table-borderless">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid h-100 bg-danger d-none">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="col-12 text-center">
+                <i class="far fa-times-circle"></i>
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+    </div>
+</body>
+
+<style>
+    body,
+    html {
+        height: 100%;
+    }
+
+    .bg-success,
+    table td .bg-mark,
+    table td i {
+        color: #ceffca;
+    }
+
+    .bg-danger,
+    .btn-outline-light,
+    table td .bg-mark,
+    table td i {
+        color: #ffe0e0;
+    }
+
+    .btn-outline-light:hover {
+        background-color: #ffe0e0;
+    }
+
+    #check-in-done-message {
+        display: block;
+        margin: auto;
+        font-weight: 700;
+        font-size: 1.25rem;
+        line-height: 48px;
+        border-radius: .3rem;
+    }
+
+    .far {
+        font-size: 16vw;
+    }
+
+    .display-5 {
+        font-size: 1.5rem;
+        font-weight: 300;
+        line-height: 1.2;
+    }
+
+    table td {
+        position: relative;
+        padding: 1.5em !important;
+    }
+
+    table td i {
+        z-index: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(0%, -15%);
+        font-size: 1.1em;
+    }
+
+    table td .bg-mark {
+        z-index: 1;
+        position: relative;
+        vertical-align: middle;
+        font-weight: 700;
+        opacity: 0.5;
+        font-size: 1.5em;
+    }
+</style>
+
+<script>
+    const DATA_COOKIE_NAME = "data";
+    const X_DAY_BACK_HISTORY = 31;
+
+    $(document).ready(function () {
+        // Load data
+        let data = load_data();
+
+        // Process data
+        process_data(data);
+
+        // Save data
+        save_data(data);
+    });
+
+    $("#check-in-btn").on("click", function () {
+        // Load data
+        let data = load_data();
+
+        // Recalculate data /shift
+        shift_data(data);
+
+        // Create new record (today = 1st pos)
+        data[0] = create_data_obj(true, new Date());
+
+        // Set view
+        set_view(true);
+
+        // Process data
+        process_data(data);
+
+        // Save data
+        save_data(data);
+    });
+
+    function set_view(ok) {
+        if (ok) {
+            $("#check-in-btn").addClass("d-none");
+
+            $("#check-in-done-message").removeClass("d-none");
+
+            $("#status-mark-check").removeClass("d-none");
+            $("#status-mark-times").addClass("d-none");
+
+            $("#main-container").removeClass("bg-danger");
+            $("#main-container").addClass("bg-success");
+        } else {
+            $("#check-in-btn").removeClass("d-none");
+
+            $("#check-in-done-message").addClass("d-none");
+
+            $("#status-mark-check").addClass("d-none");
+            $("#status-mark-times").removeClass("d-none");
+
+            $("#main-container").addClass("bg-danger");
+            $("#main-container").removeClass("bg-success");
+        }
+    }
+
+    function process_data(data) {
+        // Recalculate data /shift
+        shift_data(data);
+
+        // Clean the history table first
+        $("#table-history").empty();
+        let table_out = "";
+
+        table_out += "<tr>";
+        for (let i = 1; i < data.length; i++) {
+            // Break every 10 items
+            const element = data[i];
+
+            if ((i - 1) % 10 == 0) {
+                table_out += "</tr><tr>";
+            }
+            let mark = element.status ? `<i class="fas fa-check"></i>` : ``;
+            table_out += `<td><span class="bg-mark">${(i)}</span>${mark}</td>`;
+        }
+        table_out += "</tr>";
+
+        // Output the history table
+        $("#table-history").append(table_out);
+    }
+
+    function shift_data(data) {
+        const now = new Date();
+        let to_move = 0;
+
+        // Search the data
+        for (let i = 0; i < data.length; i++) {
+            const element = data[i];
+
+            if (element.timestamp != null) {
+                // To calculate the time difference of two dates
+                let difference_in_time = now.getTime() - Date.parse(element.timestamp); // unix timestamp
+                // To calculate the no. of days between two dates
+                let difference_in_days = difference_in_time / (1000 * 3600 * 24);
+
+                to_move = Math.floor(difference_in_days) - i;
+                break;
+            }
+        }
+
+        // Set new data
+        if (to_move < X_DAY_BACK_HISTORY) {
+            for (let i = 0; i < to_move; i++) {
+                data.splice(-1, 1); // Remove 1 from the end
+                data.unshift(create_data_obj()); // Add to the beginning
+            }
+        } else {
+            data = create_empty_data();
+        }
+    }
+
+    function load_data() {
+        let data = null;
+
+        let cookie_data = Cookies.get(DATA_COOKIE_NAME);
+        if (cookie_data) { // Parse the data from cookie
+            data = JSON.parse(cookie_data);
+        }
+
+        if (!$.isArray(data) || data.length != X_DAY_BACK_HISTORY) { // Create default structure for 30-day back history
+            data = create_empty_data();
+        }
+
+        return data;
+    }
+
+    function save_data(data) {
+        Cookies.set(DATA_COOKIE_NAME, JSON.stringify(data), { path: "" });
+    }
+
+    function create_empty_data() {
+        let arr = [];
+        for (let i = 0; i < X_DAY_BACK_HISTORY; i++) {
+            arr[i] = create_data_obj();
+        }
+        return arr;
+    }
+
+    function create_data_obj(status = false, timestamp = null) {
+        return { "status": status, "timestamp": timestamp };
+    }
+</script>
+
+</html>

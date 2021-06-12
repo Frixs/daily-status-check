@@ -1,1 +1,1 @@
-# daily-status-check
+# Daily Status Check

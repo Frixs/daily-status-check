@@ -245,7 +245,7 @@
 
             if (element.timestamp != null) {
                 // To calculate the time difference of two dates
-                let difference_in_time = now.getTime() - Date.parse(element.timestamp); // unix timestamp
+                let difference_in_time = get_date_without_time(now).getTime() - get_date_without_time(new Date(element.timestamp)).getTime(); // unix timestamp
                 // To calculate the no. of days between two dates
                 let difference_in_days = difference_in_time / (1000 * 3600 * 24);
 
